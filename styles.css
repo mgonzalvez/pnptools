@@ -50,6 +50,43 @@ h1 {
   max-width: 74ch;
 }
 
+.top-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 14px;
+}
+
+.top-nav-link {
+  text-decoration: none;
+  border: 1px solid transparent;
+  background: var(--chip);
+  color: var(--ink);
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-weight: 500;
+}
+
+.top-nav-link:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.top-nav-link.active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.submit-link {
+  background: var(--accent);
+  color: #ffffff;
+}
+
+.submit-link:hover {
+  border-color: var(--accent);
+  background: #0c625b;
+}
+
 .controls {
   display: grid;
   grid-template-columns: 1fr 220px;

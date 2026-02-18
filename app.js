@@ -5,8 +5,6 @@ const state = {
   sort: "title-asc"
 };
 
-const SUBMISSION_WEBHOOK_URL = window.PNP_TOOLS_SUBMISSION_WEBHOOK_URL || "";
-
 const els = {
   cards: document.querySelector("#cards"),
   filters: document.querySelector("#category-filters"),
@@ -14,9 +12,7 @@ const els = {
   sort: document.querySelector("#sort-select"),
   count: document.querySelector("#result-count"),
   template: document.querySelector("#card-template"),
-  submitForm: document.querySelector("#submit-form"),
-  submitBtn: document.querySelector("#submit-btn"),
-  submitStatus: document.querySelector("#submit-status")
+  topNavLinks: [...document.querySelectorAll("[data-nav-category]")]
 };
 
 init();
@@ -50,14 +46,21 @@ function bindEvents() {
     render();
   });
 
-  if (els.submitForm) {
-    els.submitForm.addEventListener("submit", handleSubmit);
-  }
+  els.topNavLinks.forEach((link) => {
+    link.addEventListener("click", (event) => {
+      event.preventDefault();
+      const label = link.getAttribute("data-nav-category");
+      const normalized = normalizeCategoryLabel(label);
+      state.activeCategory = normalized;
+      syncFilterChipState(normalized);
+      render();
+    });
+  });
 }
 
 function buildCategoryFilters() {
   const previous = state.activeCategory;
-  const categories = Array.from(new Set(state.rows.map((r) => r.category))).sort();
+  const categories = Array.from(new Set(state.rows.map((r) => normalizeCategoryLabel(r.category)))).sort();
   const items = ["All", ...categories];
   state.activeCategory = items.includes(previous) ? previous : "All";
   els.filters.innerHTML = "";
@@ -69,63 +72,19 @@ function buildCategoryFilters() {
     button.textContent = category;
     button.addEventListener("click", () => {
       state.activeCategory = category;
-      [...els.filters.querySelectorAll(".chip")].forEach((chip) => chip.classList.remove("active"));
-      button.classList.add("active");
+      syncFilterChipState(category);
       render();
     });
     els.filters.appendChild(button);
   });
 }
 
-async function handleSubmit(event) {
-  event.preventDefault();
-  const formData = new FormData(event.currentTarget);
-  const payload = {
-    category: String(formData.get("category") || "").trim(),
-    title: String(formData.get("title") || "").trim(),
-    creator: String(formData.get("creator") || "").trim(),
-    description: String(formData.get("description") || "").trim(),
-    link: String(formData.get("link") || "").trim(),
-    image: String(formData.get("image") || "").trim()
-  };
-
-  if (!payload.category || !payload.title || !payload.description || !payload.link) {
-    setSubmitStatus("Please fill all required fields.", true);
-    return;
-  }
-
-  try {
-    els.submitBtn.disabled = true;
-    setSubmitStatus("Saving...");
-    const endpoint = SUBMISSION_WEBHOOK_URL || "/api/resources";
-    await postSubmission(endpoint, payload);
-
-    const savedRow = {
-      category: payload.category,
-      title: payload.title,
-      creator: payload.creator,
-      description: payload.description,
-      link: payload.link,
-      image: payload.image
-    };
-
-    state.rows.push(savedRow);
-    buildCategoryFilters();
-    render();
-    event.currentTarget.reset();
-    setSubmitStatus("Resource added and CSV updated.");
-  } catch (err) {
-    setSubmitStatus(String(err.message || err), true);
-  } finally {
-    els.submitBtn.disabled = false;
-  }
-}
-
 function getVisibleRows() {
   const filtered = state.rows.filter((row) => {
-    if (state.activeCategory !== "All" && row.category !== state.activeCategory) return false;
+    const rowCategory = normalizeCategoryLabel(row.category);
+    if (state.activeCategory !== "All" && rowCategory !== state.activeCategory) return false;
     if (!state.query) return true;
-    const haystack = `${row.title} ${row.creator} ${row.description} ${row.category}`.toLowerCase();
+    const haystack = `${row.title} ${row.creator} ${row.description} ${row.category} ${rowCategory}`.toLowerCase();
     return haystack.includes(state.query);
   });
 
@@ -136,7 +95,7 @@ function compareRows(a, b, sortMode) {
   if (sortMode === "title-desc") return b.title.localeCompare(a.title);
   if (sortMode === "creator-asc") return a.creator.localeCompare(b.creator);
   if (sortMode === "category-asc") {
-    const byCategory = a.category.localeCompare(b.category);
+    const byCategory = normalizeCategoryLabel(a.category).localeCompare(normalizeCategoryLabel(b.category));
     return byCategory !== 0 ? byCategory : a.title.localeCompare(b.title);
   }
   return a.title.localeCompare(b.title);
@@ -176,7 +135,7 @@ function buildCard(row) {
     img.remove();
   }
 
-  tag.textContent = row.category || "Uncategorized";
+  tag.textContent = normalizeCategoryLabel(row.category) || "Uncategorized";
   title.textContent = row.title;
   creator.textContent = row.creator ? `By ${row.creator}` : "Creator unknown";
   description.textContent = row.description || "No description provided.";
@@ -260,48 +219,19 @@ function escapeHtml(value) {
     .replaceAll("'", "&#039;");
 }
 
-function setSubmitStatus(message, isError = false) {
-  if (!els.submitStatus) return;
-  els.submitStatus.textContent = message;
-  els.submitStatus.style.color = isError ? "#b42318" : "var(--muted)";
+function syncFilterChipState(activeCategory) {
+  [...els.filters.querySelectorAll(".chip")].forEach((chip) => {
+    chip.classList.toggle("active", chip.textContent === activeCategory);
+  });
+  els.topNavLinks.forEach((link) => {
+    const label = normalizeCategoryLabel(link.getAttribute("data-nav-category"));
+    link.classList.toggle("active", label === activeCategory);
+  });
 }
 
-async function postSubmission(endpoint, payload) {
-  // Try standard JSON request first.
-  try {
-    const res = await fetch(endpoint, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        submitted_at: new Date().toISOString(),
-        source: "pnp-tools",
-        ...payload
-      })
-    });
-
-    if (res.ok) return;
-
-    let msg = `Save failed (${res.status})`;
-    try {
-      const data = await res.json();
-      if (data && data.error) msg = data.error;
-    } catch (_) {}
-    throw new Error(msg);
-  } catch (primaryErr) {
-    // If webhook is Apps Script without CORS response headers, no-cors can still deliver.
-    if (endpoint.startsWith("http")) {
-      await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({
-          submitted_at: new Date().toISOString(),
-          source: "pnp-tools",
-          ...payload
-        }),
-        mode: "no-cors"
-      });
-      return;
-    }
-    throw primaryErr;
-  }
+function normalizeCategoryLabel(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+  if (/^websites?$/i.test(raw) || /^web\s*stores?$/i.test(raw)) return "Web Stores";
+  return raw;
 }

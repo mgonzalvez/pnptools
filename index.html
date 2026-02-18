@@ -17,6 +17,14 @@
       <p class="subtitle">Browse everything from one CSV-powered page. Search quickly, filter by category, and jump straight to each resource.</p>
     </header>
 
+    <nav class="top-nav" aria-label="Primary">
+      <a class="top-nav-link" href="#" data-nav-category="Utilities">Utilities</a>
+      <a class="top-nav-link" href="#" data-nav-category="Communities">Communities</a>
+      <a class="top-nav-link" href="#" data-nav-category="Geeklists">Geeklists</a>
+      <a class="top-nav-link" href="#" data-nav-category="Web Stores">Web Stores</a>
+      <a class="top-nav-link submit-link" href="submit.html">Submit Resource</a>
+    </nav>
+
     <section class="controls">
       <label class="field">
         <span>Search</span>
@@ -31,41 +39,6 @@
           <option value="category-asc">Category A-Z</option>
         </select>
       </label>
-    </section>
-
-    <section class="submit-panel">
-      <h2>Submit a Resource</h2>
-      <p class="submit-note">Submissions are sent to a Google Sheet. This site syncs updates from Sheets via GitHub Actions.</p>
-      <form id="submit-form" class="submit-form">
-        <label class="field">
-          <span>Category *</span>
-          <input name="category" required placeholder="Utilities">
-        </label>
-        <label class="field">
-          <span>Title *</span>
-          <input name="title" required placeholder="Resource title">
-        </label>
-        <label class="field">
-          <span>Creator</span>
-          <input name="creator" placeholder="Creator name">
-        </label>
-        <label class="field span-2">
-          <span>Description *</span>
-          <textarea name="description" required rows="3" placeholder="Short description"></textarea>
-        </label>
-        <label class="field span-2">
-          <span>Link *</span>
-          <input name="link" type="url" required placeholder="https://example.com">
-        </label>
-        <label class="field span-2">
-          <span>Image URL</span>
-          <input name="image" type="url" placeholder="https://example.com/image.png">
-        </label>
-        <div class="submit-actions span-2">
-          <button id="submit-btn" type="submit" class="btn">Add Resource</button>
-          <p id="submit-status" class="submit-status" aria-live="polite"></p>
-        </div>
-      </form>
     </section>
 
     <section>
@@ -94,11 +67,6 @@
     </article>
   </template>
 
-  <script>
-    // Set this to your deployed Google Apps Script web app URL.
-    // Example: https://script.google.com/macros/s/AKfy.../exec
-    window.PNP_TOOLS_SUBMISSION_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbyn_R1m8xCilBSVSaWE1fs5t50is165AK2PpqX1oaB8XFmu2jyuXevqy4ZWcDcgCK3p/exec";
-  </script>
   <script src="app.js"></script>
 </body>
 </html>

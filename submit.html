@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Submit Resource | Print and Play Tools and Resources</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="page">
+    <header class="hero">
+      <p class="eyebrow">Print and Play Directory</p>
+      <h1>Submit a Resource</h1>
+      <p class="subtitle">Submissions are sent to a Google Sheet and synced into this site via GitHub Actions.</p>
+    </header>
+
+    <nav class="top-nav" aria-label="Primary">
+      <a class="top-nav-link" href="index.html">Browse Resources</a>
+    </nav>
+
+    <section class="submit-panel">
+      <form id="submit-form" class="submit-form">
+        <label class="field">
+          <span>Category *</span>
+          <input name="category" required placeholder="Utilities">
+        </label>
+        <label class="field">
+          <span>Title *</span>
+          <input name="title" required placeholder="Resource title">
+        </label>
+        <label class="field">
+          <span>Creator</span>
+          <input name="creator" placeholder="Creator name">
+        </label>
+        <label class="field span-2">
+          <span>Description *</span>
+          <textarea name="description" required rows="3" placeholder="Short description"></textarea>
+        </label>
+        <label class="field span-2">
+          <span>Link *</span>
+          <input name="link" type="url" required placeholder="https://example.com">
+        </label>
+        <label class="field span-2">
+          <span>Image URL</span>
+          <input name="image" type="url" placeholder="https://example.com/image.png">
+        </label>
+        <div class="submit-actions span-2">
+          <button id="submit-btn" type="submit" class="btn">Add Resource</button>
+          <p id="submit-status" class="submit-status" aria-live="polite"></p>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <script>
+    window.PNP_TOOLS_SUBMISSION_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbyn_R1m8xCilBSVSaWE1fs5t50is165AK2PpqX1oaB8XFmu2jyuXevqy4ZWcDcgCK3p/exec";
+  </script>
+  <script src="submit.js"></script>
+</body>
+</html>
