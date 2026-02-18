@@ -1,0 +1,137 @@
+name: Sync resources.csv from Google Sheets
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  SHEETS_CSV_URL: ${{ vars.GOOGLE_SHEETS_RESOURCES_CSV_URL }}
+  REQUIRED_HEADER: "CATEGORY,TITLE,CREATOR,DESCRIPTION,LINK,IMAGE"
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate config
+        run: |
+          set -euo pipefail
+          if [ -z "${SHEETS_CSV_URL}" ]; then
+            echo "Missing repo variable GOOGLE_SHEETS_RESOURCES_CSV_URL."
+            exit 1
+          fi
+
+      - name: Download sheet CSV
+        run: |
+          set -euo pipefail
+          mkdir -p data
+          URL="${SHEETS_CSV_URL}&nocache=${GITHUB_RUN_ID}"
+          curl -sSL -H 'Cache-Control: no-cache' -H 'Pragma: no-cache' "$URL" -o data/resources.source.csv
+          sed -i '1s/^\xEF\xBB\xBF//' data/resources.source.csv
+          echo "Downloaded header:"
+          head -n 1 data/resources.source.csv
+
+      - name: Normalize headers and order
+        run: |
+          python3 - << 'PY'
+          import csv, re
+
+          SRC = "data/resources.source.csv"
+          OUT = "data/resources.normalized.csv"
+          CANON = ["CATEGORY","TITLE","CREATOR","DESCRIPTION","LINK","IMAGE"]
+
+          def norm(s):
+            return re.sub(r"[^a-z0-9]+", " ", (s or "").strip().lower()).strip()
+
+          aliases = {
+            norm("CATEGORY"): "CATEGORY",
+            norm("TYPE"): "CATEGORY",
+            norm("TITLE"): "TITLE",
+            norm("NAME"): "TITLE",
+            norm("CREATOR"): "CREATOR",
+            norm("AUTHOR"): "CREATOR",
+            norm("DESCRIPTION"): "DESCRIPTION",
+            norm("DESC"): "DESCRIPTION",
+            norm("LINK"): "LINK",
+            norm("URL"): "LINK",
+            norm("WEBSITE"): "LINK",
+            norm("IMAGE"): "IMAGE",
+            norm("IMG"): "IMAGE",
+            norm("THUMBNAIL"): "IMAGE",
+          }
+
+          with open(SRC, newline="", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            src_fields = reader.fieldnames or []
+
+            keymap = {}
+            for key in src_fields:
+              keymap[key] = aliases.get(norm(key))
+
+            rows = list(reader)
+
+          with open(OUT, "w", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=CANON)
+            writer.writeheader()
+            for row in rows:
+              out = {k: "" for k in CANON}
+              for key, value in row.items():
+                mapped = keymap.get(key)
+                if mapped in out:
+                  out[mapped] = value
+              writer.writerow(out)
+          PY
+
+      - name: Validate normalized file
+        run: |
+          set -euo pipefail
+          ACTUAL="$(head -n 1 data/resources.normalized.csv | tr -d '\r')"
+          echo "Normalized header: $ACTUAL"
+          if [ "$ACTUAL" != "$REQUIRED_HEADER" ]; then
+            echo "Header mismatch."
+            exit 1
+          fi
+          ROWS=$(wc -l < data/resources.normalized.csv || echo 0)
+          if [ "$ROWS" -lt 2 ]; then
+            echo "No data rows."
+            exit 1
+          fi
+
+      - name: Detect changes
+        id: diff
+        run: |
+          set -euo pipefail
+          if [ ! -f data/resources.csv ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          NEW_SHA="$(sha256sum data/resources.normalized.csv | awk '{print $1}')"
+          OLD_SHA="$(sha256sum data/resources.csv | awk '{print $1}')"
+          if [ "$NEW_SHA" != "$OLD_SHA" ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Commit sync
+        if: steps.diff.outputs.changed == 'true'
+        run: |
+          set -euo pipefail
+          mv data/resources.normalized.csv data/resources.csv
+          git config user.name "pnp-tools-bot"
+          git config user.email "bot@users.noreply.github.com"
+          git add data/resources.csv
+          if git diff --cached --quiet; then
+            echo "Nothing to commit."
+            exit 0
+          fi
+          git commit -m "chore: sync resources.csv from Google Sheets"
+          git push
