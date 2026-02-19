@@ -76,7 +76,9 @@ function bindEvents() {
 function getVisibleRows() {
   const filtered = state.rows.filter((row) => {
     const rowCategory = normalizeCategoryLabel(row.category);
-    if (state.activeCategory !== "All" && rowCategory !== state.activeCategory) return false;
+    const rowCategoryKey = categoryKey(row.category);
+    const activeCategoryKey = categoryKey(state.activeCategory);
+    if (activeCategoryKey !== "all" && rowCategoryKey !== activeCategoryKey) return false;
     if (!state.query) return true;
     const haystack = `${row.title} ${row.creator} ${row.description} ${row.category} ${rowCategory}`.toLowerCase();
     return haystack.includes(state.query);
@@ -216,16 +218,26 @@ function escapeHtml(value) {
 
 function syncTopNavState(activeCategory) {
   els.topNavLinks.forEach((link) => {
-    const label = normalizeCategoryLabel(link.getAttribute("data-nav-category"));
-    link.classList.toggle("active", label === activeCategory);
+    const label = link.getAttribute("data-nav-category");
+    link.classList.toggle("active", categoryKey(label) === categoryKey(activeCategory));
   });
 }
 
 function normalizeCategoryLabel(value) {
   const raw = String(value || "").trim();
   if (!raw) return "";
-  if (/^websites?$/i.test(raw) || /^web\s*stores?$/i.test(raw)) return "Web Stores";
+  if (/^all$/i.test(raw)) return "All";
+  if (/^martin'?s tools$/i.test(raw)) return "Martin's Tools";
+  if (/^pnp\s*geeklists?$/i.test(raw) || /^geeklists?$/i.test(raw)) return "PnP Geeklists";
+  if (/^pnp\s*groups?$/i.test(raw) || /^communities$/i.test(raw)) return "PnP Groups";
+  if (/^pnp\s*stores?$/i.test(raw) || /^websites?$/i.test(raw) || /^web\s*stores?$/i.test(raw)) return "PnP Stores";
+  if (/^pnp\s*tools?$/i.test(raw) || /^utilities$/i.test(raw)) return "PnP Tools";
   return raw;
+}
+
+function categoryKey(value) {
+  const normalized = normalizeCategoryLabel(value).toLowerCase();
+  return normalized.replace(/\s+/g, " ").trim();
 }
 
 function resolveImageUrl(value) {
