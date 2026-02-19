@@ -16,14 +16,23 @@ async function handleSubmit(event) {
   const payload = {
     category: String(formData.get("category") || "").trim(),
     title: String(formData.get("title") || "").trim(),
-    creator: String(formData.get("creator") || "").trim(),
     description: String(formData.get("description") || "").trim(),
     link: String(formData.get("link") || "").trim(),
     image: String(formData.get("image") || "").trim()
   };
 
-  if (!payload.category || !payload.title || !payload.description || !payload.link) {
+  if (!event.currentTarget.reportValidity()) {
     setStatus("Please fill all required fields.", true);
+    return;
+  }
+
+  if (!isValidHttpUrl(payload.link)) {
+    setStatus("Resource link must be a valid public http(s) URL.", true);
+    return;
+  }
+
+  if (!isDirectPublicImageUrl(payload.image)) {
+    setStatus("Image URL must be a public direct .jpg or .png link.", true);
     return;
   }
 
@@ -82,4 +91,40 @@ function setStatus(message, isError = false) {
   if (!els.status) return;
   els.status.textContent = message;
   els.status.style.color = isError ? "#b42318" : "var(--muted)";
+}
+
+function isValidHttpUrl(value) {
+  try {
+    const url = new URL(value);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch (_) {
+    return false;
+  }
+}
+
+function isDirectPublicImageUrl(value) {
+  if (!isValidHttpUrl(value)) return false;
+  try {
+    const url = new URL(value);
+    const host = url.hostname.toLowerCase();
+    const pathname = url.pathname.toLowerCase();
+    const blockedHosts = [
+      "drive.google.com",
+      "docs.google.com",
+      "dropbox.com",
+      "onedrive.live.com",
+      "icloud.com",
+      "mega.nz",
+      "facebook.com",
+      "localhost",
+      "127.0.0.1"
+    ];
+
+    if (blockedHosts.some((h) => host === h || host.endsWith(`.${h}`))) return false;
+    if (host.endsWith(".local")) return false;
+    if (!/\.(jpg|jpeg|png)$/i.test(pathname)) return false;
+    return true;
+  } catch (_) {
+    return false;
+  }
 }
