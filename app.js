@@ -15,7 +15,6 @@ const BASE_PATH = (() => {
 
 const els = {
   cards: document.querySelector("#cards"),
-  filters: document.querySelector("#category-filters"),
   search: document.querySelector("#search-input"),
   sort: document.querySelector("#sort-select"),
   count: document.querySelector("#result-count"),
@@ -34,7 +33,6 @@ async function init() {
       .map(normalizeRow)
       .filter((row) => row.title && row.link);
 
-    buildCategoryFilters();
     bindEvents();
     render();
   } catch (err) {
@@ -60,30 +58,9 @@ function bindEvents() {
       const label = link.getAttribute("data-nav-category");
       const normalized = normalizeCategoryLabel(label);
       state.activeCategory = normalized;
-      syncFilterChipState(normalized);
+      syncTopNavState(normalized);
       render();
     });
-  });
-}
-
-function buildCategoryFilters() {
-  const previous = state.activeCategory;
-  const categories = Array.from(new Set(state.rows.map((r) => normalizeCategoryLabel(r.category)))).sort();
-  const items = ["All", ...categories];
-  state.activeCategory = items.includes(previous) ? previous : "All";
-  els.filters.innerHTML = "";
-
-  items.forEach((category) => {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = `chip${category === state.activeCategory ? " active" : ""}`;
-    button.textContent = category;
-    button.addEventListener("click", () => {
-      state.activeCategory = category;
-      syncFilterChipState(category);
-      render();
-    });
-    els.filters.appendChild(button);
   });
 }
 
@@ -227,10 +204,7 @@ function escapeHtml(value) {
     .replaceAll("'", "&#039;");
 }
 
-function syncFilterChipState(activeCategory) {
-  [...els.filters.querySelectorAll(".chip")].forEach((chip) => {
-    chip.classList.toggle("active", chip.textContent === activeCategory);
-  });
+function syncTopNavState(activeCategory) {
   els.topNavLinks.forEach((link) => {
     const label = normalizeCategoryLabel(link.getAttribute("data-nav-category"));
     link.classList.toggle("active", label === activeCategory);
