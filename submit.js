@@ -1,12 +1,12 @@
 const SUBMISSION_WEBHOOK_URL = window.PNP_TOOLS_SUBMISSION_WEBHOOK_URL || "";
 const RESOURCE_CSV_URL = "data/resources.csv";
 let existingEntries = null;
+let isSubmitting = false;
 
 const els = {
   form: document.querySelector("#submit-form"),
   btn: document.querySelector("#submit-btn"),
-  status: document.querySelector("#submit-status"),
-  debug: document.querySelector("#submit-debug")
+  status: document.querySelector("#submit-status")
 };
 
 if (els.form) {
@@ -16,21 +16,17 @@ if (els.form) {
 
 async function handleSubmit(event) {
   event.preventDefault();
-  const submissionRef = makeSubmissionRef();
+  if (isSubmitting) return;
   const submittedAt = new Date().toISOString();
-  clearDebug();
 
   const form = event.currentTarget;
   if (!form) {
     setStatus("Form could not be submitted. Please reload and try again.", true);
-    setDebug(formatDebugBlock({
-      submissionRef,
-      submittedAt,
-      endpoint: SUBMISSION_WEBHOOK_URL || "/api/resources",
-      reason: "Missing form element"
-    }));
     return;
   }
+
+  isSubmitting = true;
+  if (els.btn) els.btn.disabled = true;
 
   const formData = new FormData(form);
   const payload = {
@@ -43,121 +39,67 @@ async function handleSubmit(event) {
 
   if (!form.reportValidity()) {
     setStatus("Please fill all required fields.", true);
-    setDebug(formatDebugBlock({
-      submissionRef,
-      submittedAt,
-      endpoint: SUBMISSION_WEBHOOK_URL || "/api/resources",
-      reason: "Native form validation failed"
-    }));
+    isSubmitting = false;
+    if (els.btn) els.btn.disabled = false;
     return;
   }
 
   if (!isValidHttpUrl(payload.link)) {
     setStatus("Resource link must be a valid public http(s) URL.", true);
-    setDebug(formatDebugBlock({
-      submissionRef,
-      submittedAt,
-      endpoint: SUBMISSION_WEBHOOK_URL || "/api/resources",
-      reason: "Invalid resource link",
-      payload
-    }));
+    isSubmitting = false;
+    if (els.btn) els.btn.disabled = false;
     return;
   }
 
   if (normalizeText(payload.category) === normalizeText("Martin's Tools")) {
     setStatus("That category is reserved and cannot be submitted through this form.", true);
-    setDebug(formatDebugBlock({
-      submissionRef,
-      submittedAt,
-      endpoint: SUBMISSION_WEBHOOK_URL || "/api/resources",
-      reason: "Reserved category blocked",
-      payload
-    }));
+    isSubmitting = false;
+    if (els.btn) els.btn.disabled = false;
     return;
   }
 
   if (!isDirectPublicImageUrl(payload.image)) {
     setStatus("Image URL must be a public direct .jpg or .png link.", true);
-    setDebug(formatDebugBlock({
-      submissionRef,
-      submittedAt,
-      endpoint: SUBMISSION_WEBHOOK_URL || "/api/resources",
-      reason: "Invalid image URL",
-      payload
-    }));
+    isSubmitting = false;
+    if (els.btn) els.btn.disabled = false;
     return;
   }
 
   const duplicate = await findDuplicate(payload);
   if (duplicate) {
     setStatus("Duplicate submission: this resource already exists on the site.", true);
-    setDebug(formatDebugBlock({
-      submissionRef,
-      submittedAt,
-      endpoint: SUBMISSION_WEBHOOK_URL || "/api/resources",
-      reason: `Duplicate match found (${duplicate.reason})`,
-      payload
-    }));
+    isSubmitting = false;
+    if (els.btn) els.btn.disabled = false;
     return;
   }
 
   try {
-    els.btn.disabled = true;
     setStatus("Submitting...");
     const endpoint = SUBMISSION_WEBHOOK_URL || "/api/resources";
-    const result = await postSubmission(endpoint, payload, submittedAt);
+    await postSubmission(endpoint, payload, submittedAt);
     form.reset();
-    if (result.delivery === "verified") {
-      setStatus(`Submission accepted. Reference: ${submissionRef}`);
-    } else {
-      setStatus(`Submission request sent. Reference: ${submissionRef}`);
-    }
-    setDebug(formatDebugBlock({
-      submissionRef,
-      submittedAt,
-      endpoint,
-      reason: result.delivery === "verified" ? "Submission accepted by endpoint" : "Submission sent via no-cors fallback (delivery unverified)",
-      payload
-    }));
+    setStatus("Submission successful. Thank you for contributing.");
   } catch (err) {
-    const endpoint = SUBMISSION_WEBHOOK_URL || "/api/resources";
-    setStatus(`Submission failed. Share reference ${submissionRef} with webmaster.`, true);
-    setDebug(formatDebugBlock({
-      submissionRef,
-      submittedAt,
-      endpoint,
-      reason: String(err.message || err),
-      payload
-    }));
+    setStatus("Submission failed. Please try again in a moment.", true);
   } finally {
-    els.btn.disabled = false;
+    isSubmitting = false;
+    if (els.btn) els.btn.disabled = false;
   }
 }
 
 async function postSubmission(endpoint, payload, submittedAt) {
   if (isAppsScriptEndpoint(endpoint)) {
-    const body = JSON.stringify({
-      submitted_at: submittedAt,
-      source: "pnp-tools",
-      ...payload
+    await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({
+        submitted_at: submittedAt,
+        source: "pnp-tools",
+        ...payload
+      }),
+      mode: "no-cors"
     });
-    try {
-      const res = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body
-      });
-      if (!res.ok) throw new Error(`Save failed (${res.status})`);
-      return { delivery: "verified" };
-    } catch (_) {
-      await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body,
-        mode: "no-cors"
-      });
-      return { delivery: "sent" };
-    }
+    return { delivery: "sent" };
   }
 
   try {
@@ -203,18 +145,6 @@ function setStatus(message, isError = false) {
   els.status.style.color = isError ? "#b42318" : "var(--muted)";
 }
 
-function setDebug(message) {
-  if (!els.debug) return;
-  els.debug.hidden = false;
-  els.debug.textContent = message;
-}
-
-function clearDebug() {
-  if (!els.debug) return;
-  els.debug.hidden = true;
-  els.debug.textContent = "";
-}
-
 function isValidHttpUrl(value) {
   try {
     const url = new URL(value);
@@ -258,23 +188,6 @@ function isAppsScriptEndpoint(endpoint) {
   } catch (_) {
     return false;
   }
-}
-
-function makeSubmissionRef() {
-  return `PNPT-${Date.now().toString(36).toUpperCase()}`;
-}
-
-function formatDebugBlock({ submissionRef, submittedAt, endpoint, reason, payload }) {
-  return [
-    "Submission Diagnostics",
-    `Reference: ${submissionRef || ""}`,
-    `Time (UTC): ${submittedAt || ""}`,
-    `Endpoint: ${endpoint || ""}`,
-    `Result: ${reason || ""}`,
-    payload ? `Payload: ${JSON.stringify(payload)}` : ""
-  ]
-    .filter(Boolean)
-    .join("\n");
 }
 
 async function warmExistingEntries() {
