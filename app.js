@@ -25,6 +25,11 @@ const els = {
 init();
 
 async function init() {
+  if (!els.cards || !els.count || !els.search || !els.sort || !els.template) {
+    console.error("Directory UI elements are missing from the page.");
+    return;
+  }
+
   try {
     const res = await fetch("data/resources.csv");
     if (!res.ok) throw new Error(`Failed to load CSV (${res.status})`);
@@ -36,12 +41,16 @@ async function init() {
     bindEvents();
     render();
   } catch (err) {
-    els.count.textContent = "Could not load resources.";
-    els.cards.innerHTML = `<p class="empty-state">${escapeHtml(String(err.message || err))}</p>`;
+    if (els.count) els.count.textContent = "Could not load resources.";
+    if (els.cards) {
+      els.cards.innerHTML = `<p class="empty-state">${escapeHtml(String(err.message || err))}</p>`;
+    }
   }
 }
 
 function bindEvents() {
+  if (!els.search || !els.sort) return;
+
   els.search.addEventListener("input", (e) => {
     state.query = e.target.value.trim().toLowerCase();
     render();
@@ -87,6 +96,7 @@ function compareRows(a, b, sortMode) {
 }
 
 function render() {
+  if (!els.cards || !els.count) return;
   const rows = getVisibleRows();
   els.count.textContent = `${rows.length} resource${rows.length === 1 ? "" : "s"} shown`;
   els.cards.innerHTML = "";
