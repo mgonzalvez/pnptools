@@ -57,6 +57,20 @@ async function handleSubmit(event) {
 }
 
 async function postSubmission(endpoint, payload) {
+  if (isAppsScriptEndpoint(endpoint)) {
+    await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({
+        submitted_at: new Date().toISOString(),
+        source: "pnp-tools",
+        ...payload
+      }),
+      mode: "no-cors"
+    });
+    return;
+  }
+
   try {
     const res = await fetch(endpoint, {
       method: "POST",
@@ -130,6 +144,15 @@ function isDirectPublicImageUrl(value) {
     if (host.endsWith(".local")) return false;
     if (!/\.(jpg|jpeg|png)$/i.test(pathname)) return false;
     return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+function isAppsScriptEndpoint(endpoint) {
+  try {
+    const url = new URL(endpoint);
+    return /(^|\.)script\.google\.com$/i.test(url.hostname);
   } catch (_) {
     return false;
   }
