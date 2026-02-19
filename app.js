@@ -225,7 +225,7 @@ function normalizeCategoryLabel(value) {
   if (!raw) return "";
   if (/^all$/i.test(raw)) return "All";
   if (/^martin'?s tools$/i.test(raw)) return "Martin's Tools";
-  if (/^pnp\s*geeklists?$/i.test(raw) || /^geeklists?$/i.test(raw)) return "PnP Geeklists";
+  if (/^free\s*pnp\s*sources$/i.test(raw) || /^pnp\s*geeklists?$/i.test(raw) || /^geeklists?$/i.test(raw)) return "Free PnP Sources";
   if (/^pnp\s*groups?$/i.test(raw) || /^communities$/i.test(raw)) return "PnP Groups";
   if (/^pnp\s*stores?$/i.test(raw) || /^websites?$/i.test(raw) || /^web\s*stores?$/i.test(raw)) return "PnP Stores";
   if (/^pnp\s*tools?$/i.test(raw) || /^utilities$/i.test(raw)) return "PnP Tools";
