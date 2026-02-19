@@ -80,7 +80,7 @@ function getVisibleRows() {
     const activeCategoryKey = categoryKey(state.activeCategory);
     if (activeCategoryKey !== "all" && rowCategoryKey !== activeCategoryKey) return false;
     if (!state.query) return true;
-    const haystack = `${row.title} ${row.creator} ${row.description} ${row.category} ${rowCategory}`.toLowerCase();
+    const haystack = `${row.title} ${row.description} ${row.category} ${rowCategory}`.toLowerCase();
     return haystack.includes(state.query);
   });
 
@@ -89,7 +89,6 @@ function getVisibleRows() {
 
 function compareRows(a, b, sortMode) {
   if (sortMode === "title-desc") return b.title.localeCompare(a.title);
-  if (sortMode === "creator-asc") return a.creator.localeCompare(b.creator);
   if (sortMode === "category-asc") {
     const byCategory = normalizeCategoryLabel(a.category).localeCompare(normalizeCategoryLabel(b.category));
     return byCategory !== 0 ? byCategory : a.title.localeCompare(b.title);
@@ -121,7 +120,6 @@ function buildCard(row) {
   const img = node.querySelector(".card-image");
   const tag = node.querySelector(".category-tag");
   const title = node.querySelector(".card-title");
-  const creator = node.querySelector(".card-creator");
   const description = node.querySelector(".card-description");
   const link = node.querySelector(".card-link");
 
@@ -134,7 +132,6 @@ function buildCard(row) {
 
   tag.textContent = normalizeCategoryLabel(row.category) || "Uncategorized";
   title.textContent = row.title;
-  creator.textContent = row.creator ? `By ${row.creator}` : "Creator unknown";
   description.textContent = row.description || "No description provided.";
   link.href = row.link;
   link.setAttribute("aria-label", `Open ${row.title}`);
