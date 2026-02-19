@@ -12,7 +12,13 @@ if (els.form) {
 
 async function handleSubmit(event) {
   event.preventDefault();
-  const formData = new FormData(event.currentTarget);
+  const form = event.currentTarget;
+  if (!form) {
+    setStatus("Form could not be submitted. Please reload and try again.", true);
+    return;
+  }
+
+  const formData = new FormData(form);
   const payload = {
     category: String(formData.get("category") || "").trim(),
     title: String(formData.get("title") || "").trim(),
@@ -21,7 +27,7 @@ async function handleSubmit(event) {
     image: String(formData.get("image") || "").trim()
   };
 
-  if (!event.currentTarget.reportValidity()) {
+  if (!form.reportValidity()) {
     setStatus("Please fill all required fields.", true);
     return;
   }
@@ -41,7 +47,7 @@ async function handleSubmit(event) {
     setStatus("Submitting...");
     const endpoint = SUBMISSION_WEBHOOK_URL || "/api/resources";
     await postSubmission(endpoint, payload);
-    event.currentTarget.reset();
+    form.reset();
     setStatus("Submission sent. It will appear after sheet sync.");
   } catch (err) {
     setStatus(String(err.message || err), true);
