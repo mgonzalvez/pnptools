@@ -5,6 +5,14 @@ const state = {
   sort: "title-asc"
 };
 
+const BASE_PATH = (() => {
+  if (window.location.hostname.endsWith("github.io")) {
+    const first = window.location.pathname.split("/").filter(Boolean)[0];
+    return first ? `/${first}` : "";
+  }
+  return "";
+})();
+
 const els = {
   cards: document.querySelector("#cards"),
   filters: document.querySelector("#category-filters"),
@@ -129,7 +137,7 @@ function buildCard(row) {
   const link = node.querySelector(".card-link");
 
   if (row.image) {
-    img.src = row.image;
+    img.src = resolveImageUrl(row.image);
     img.alt = `${row.title} preview`;
   } else {
     img.remove();
@@ -233,5 +241,16 @@ function normalizeCategoryLabel(value) {
   const raw = String(value || "").trim();
   if (!raw) return "";
   if (/^websites?$/i.test(raw) || /^web\s*stores?$/i.test(raw)) return "Web Stores";
+  return raw;
+}
+
+function resolveImageUrl(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+  if (/^https?:\/\//i.test(raw)) return raw;
+  if (!BASE_PATH) return raw;
+  if (raw.startsWith(`${BASE_PATH}/`)) return raw;
+  if (raw.startsWith("/images/")) return `${BASE_PATH}${raw}`;
+  if (raw.startsWith("/")) return `${BASE_PATH}${raw}`;
   return raw;
 }
