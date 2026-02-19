@@ -64,6 +64,18 @@ async function handleSubmit(event) {
     return;
   }
 
+  if (normalizeText(payload.category) === normalizeText("Martin's Tools")) {
+    setStatus("That category is reserved and cannot be submitted through this form.", true);
+    setDebug(formatDebugBlock({
+      submissionRef,
+      submittedAt,
+      endpoint: SUBMISSION_WEBHOOK_URL || "/api/resources",
+      reason: "Reserved category blocked",
+      payload
+    }));
+    return;
+  }
+
   if (!isDirectPublicImageUrl(payload.image)) {
     setStatus("Image URL must be a public direct .jpg or .png link.", true);
     setDebug(formatDebugBlock({
