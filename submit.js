@@ -3,7 +3,8 @@ const SUBMISSION_WEBHOOK_URL = window.PNP_TOOLS_SUBMISSION_WEBHOOK_URL || "";
 const els = {
   form: document.querySelector("#submit-form"),
   btn: document.querySelector("#submit-btn"),
-  status: document.querySelector("#submit-status")
+  status: document.querySelector("#submit-status"),
+  debug: document.querySelector("#submit-debug")
 };
 
 if (els.form) {
@@ -12,9 +13,19 @@ if (els.form) {
 
 async function handleSubmit(event) {
   event.preventDefault();
+  const submissionRef = makeSubmissionRef();
+  const submittedAt = new Date().toISOString();
+  clearDebug();
+
   const form = event.currentTarget;
   if (!form) {
     setStatus("Form could not be submitted. Please reload and try again.", true);
+    setDebug(formatDebugBlock({
+      submissionRef,
+      submittedAt,
+      endpoint: SUBMISSION_WEBHOOK_URL || "/api/resources",
+      reason: "Missing form element"
+    }));
     return;
   }
 
@@ -29,16 +40,36 @@ async function handleSubmit(event) {
 
   if (!form.reportValidity()) {
     setStatus("Please fill all required fields.", true);
+    setDebug(formatDebugBlock({
+      submissionRef,
+      submittedAt,
+      endpoint: SUBMISSION_WEBHOOK_URL || "/api/resources",
+      reason: "Native form validation failed"
+    }));
     return;
   }
 
   if (!isValidHttpUrl(payload.link)) {
     setStatus("Resource link must be a valid public http(s) URL.", true);
+    setDebug(formatDebugBlock({
+      submissionRef,
+      submittedAt,
+      endpoint: SUBMISSION_WEBHOOK_URL || "/api/resources",
+      reason: "Invalid resource link",
+      payload
+    }));
     return;
   }
 
   if (!isDirectPublicImageUrl(payload.image)) {
     setStatus("Image URL must be a public direct .jpg or .png link.", true);
+    setDebug(formatDebugBlock({
+      submissionRef,
+      submittedAt,
+      endpoint: SUBMISSION_WEBHOOK_URL || "/api/resources",
+      reason: "Invalid image URL",
+      payload
+    }));
     return;
   }
 
@@ -46,29 +77,59 @@ async function handleSubmit(event) {
     els.btn.disabled = true;
     setStatus("Submitting...");
     const endpoint = SUBMISSION_WEBHOOK_URL || "/api/resources";
-    await postSubmission(endpoint, payload);
+    const result = await postSubmission(endpoint, payload, submittedAt);
     form.reset();
-    setStatus("Submission sent. It will appear after sheet sync.");
+    if (result.delivery === "verified") {
+      setStatus(`Submission accepted. Reference: ${submissionRef}`);
+    } else {
+      setStatus(`Submission request sent. Reference: ${submissionRef}`);
+    }
+    setDebug(formatDebugBlock({
+      submissionRef,
+      submittedAt,
+      endpoint,
+      reason: result.delivery === "verified" ? "Submission accepted by endpoint" : "Submission sent via no-cors fallback (delivery unverified)",
+      payload
+    }));
   } catch (err) {
-    setStatus(String(err.message || err), true);
+    const endpoint = SUBMISSION_WEBHOOK_URL || "/api/resources";
+    setStatus(`Submission failed. Share reference ${submissionRef} with webmaster.`, true);
+    setDebug(formatDebugBlock({
+      submissionRef,
+      submittedAt,
+      endpoint,
+      reason: String(err.message || err),
+      payload
+    }));
   } finally {
     els.btn.disabled = false;
   }
 }
 
-async function postSubmission(endpoint, payload) {
+async function postSubmission(endpoint, payload, submittedAt) {
   if (isAppsScriptEndpoint(endpoint)) {
-    await fetch(endpoint, {
-      method: "POST",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({
-        submitted_at: new Date().toISOString(),
-        source: "pnp-tools",
-        ...payload
-      }),
-      mode: "no-cors"
+    const body = JSON.stringify({
+      submitted_at: submittedAt,
+      source: "pnp-tools",
+      ...payload
     });
-    return;
+    try {
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body
+      });
+      if (!res.ok) throw new Error(`Save failed (${res.status})`);
+      return { delivery: "verified" };
+    } catch (_) {
+      await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body,
+        mode: "no-cors"
+      });
+      return { delivery: "sent" };
+    }
   }
 
   try {
@@ -76,12 +137,12 @@ async function postSubmission(endpoint, payload) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        submitted_at: new Date().toISOString(),
+        submitted_at: submittedAt,
         source: "pnp-tools",
         ...payload
       })
     });
-    if (res.ok) return;
+    if (res.ok) return { delivery: "verified" };
 
     let msg = `Save failed (${res.status})`;
     try {
@@ -95,22 +156,35 @@ async function postSubmission(endpoint, payload) {
         method: "POST",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify({
-          submitted_at: new Date().toISOString(),
+          submitted_at: submittedAt,
           source: "pnp-tools",
           ...payload
         }),
         mode: "no-cors"
       });
-      return;
+      return { delivery: "sent" };
     }
     throw primaryErr;
   }
+  return { delivery: "verified" };
 }
 
 function setStatus(message, isError = false) {
   if (!els.status) return;
   els.status.textContent = message;
   els.status.style.color = isError ? "#b42318" : "var(--muted)";
+}
+
+function setDebug(message) {
+  if (!els.debug) return;
+  els.debug.hidden = false;
+  els.debug.textContent = message;
+}
+
+function clearDebug() {
+  if (!els.debug) return;
+  els.debug.hidden = true;
+  els.debug.textContent = "";
 }
 
 function isValidHttpUrl(value) {
@@ -156,4 +230,21 @@ function isAppsScriptEndpoint(endpoint) {
   } catch (_) {
     return false;
   }
+}
+
+function makeSubmissionRef() {
+  return `PNPT-${Date.now().toString(36).toUpperCase()}`;
+}
+
+function formatDebugBlock({ submissionRef, submittedAt, endpoint, reason, payload }) {
+  return [
+    "Submission Diagnostics",
+    `Reference: ${submissionRef || ""}`,
+    `Time (UTC): ${submittedAt || ""}`,
+    `Endpoint: ${endpoint || ""}`,
+    `Result: ${reason || ""}`,
+    payload ? `Payload: ${JSON.stringify(payload)}` : ""
+  ]
+    .filter(Boolean)
+    .join("\n");
 }
