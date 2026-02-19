@@ -1,4 +1,6 @@
 const SUBMISSION_WEBHOOK_URL = window.PNP_TOOLS_SUBMISSION_WEBHOOK_URL || "";
+const RESOURCE_CSV_URL = "data/resources.csv";
+let existingEntries = null;
 
 const els = {
   form: document.querySelector("#submit-form"),
@@ -9,6 +11,7 @@ const els = {
 
 if (els.form) {
   els.form.addEventListener("submit", handleSubmit);
+  warmExistingEntries();
 }
 
 async function handleSubmit(event) {
@@ -68,6 +71,19 @@ async function handleSubmit(event) {
       submittedAt,
       endpoint: SUBMISSION_WEBHOOK_URL || "/api/resources",
       reason: "Invalid image URL",
+      payload
+    }));
+    return;
+  }
+
+  const duplicate = await findDuplicate(payload);
+  if (duplicate) {
+    setStatus("Duplicate submission: this resource already exists on the site.", true);
+    setDebug(formatDebugBlock({
+      submissionRef,
+      submittedAt,
+      endpoint: SUBMISSION_WEBHOOK_URL || "/api/resources",
+      reason: `Duplicate match found (${duplicate.reason})`,
       payload
     }));
     return;
@@ -247,4 +263,125 @@ function formatDebugBlock({ submissionRef, submittedAt, endpoint, reason, payloa
   ]
     .filter(Boolean)
     .join("\n");
+}
+
+async function warmExistingEntries() {
+  try {
+    await loadExistingEntries();
+  } catch (_) {
+    // Non-blocking: duplicate check will degrade gracefully.
+  }
+}
+
+async function loadExistingEntries() {
+  if (existingEntries) return existingEntries;
+  const res = await fetch(RESOURCE_CSV_URL, { cache: "no-store" });
+  if (!res.ok) throw new Error(`Could not load resources CSV (${res.status})`);
+  const csv = await res.text();
+  const rows = parseCSV(csv);
+  existingEntries = rows.map((row) => ({
+    category: normalizeText(row.CATEGORY || ""),
+    title: normalizeText(row.TITLE || ""),
+    link: normalizeUrl(row.LINK || "")
+  }));
+  return existingEntries;
+}
+
+async function findDuplicate(payload) {
+  let rows;
+  try {
+    rows = await loadExistingEntries();
+  } catch (_) {
+    return null;
+  }
+
+  const incoming = {
+    category: normalizeText(payload.category),
+    title: normalizeText(payload.title),
+    link: normalizeUrl(payload.link)
+  };
+
+  const byLink = rows.find((row) => row.link && row.link === incoming.link);
+  if (byLink) return { reason: "same link" };
+
+  const byTitleCategory = rows.find(
+    (row) => row.title && row.category && row.title === incoming.title && row.category === incoming.category
+  );
+  if (byTitleCategory) return { reason: "same title and category" };
+
+  return null;
+}
+
+function normalizeText(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ");
+}
+
+function normalizeUrl(value) {
+  try {
+    const url = new URL(String(value || "").trim());
+    url.hash = "";
+    if (url.pathname !== "/") {
+      url.pathname = url.pathname.replace(/\/+$/, "");
+    }
+    return url.toString().toLowerCase();
+  } catch (_) {
+    return String(value || "").trim().toLowerCase();
+  }
+}
+
+function parseCSV(text) {
+  const rows = [];
+  let row = [];
+  let cell = "";
+  let inQuotes = false;
+
+  for (let i = 0; i < text.length; i += 1) {
+    const char = text[i];
+    const next = text[i + 1];
+
+    if (char === '"') {
+      if (inQuotes && next === '"') {
+        cell += '"';
+        i += 1;
+      } else {
+        inQuotes = !inQuotes;
+      }
+      continue;
+    }
+
+    if (char === "," && !inQuotes) {
+      row.push(cell);
+      cell = "";
+      continue;
+    }
+
+    if ((char === "\n" || char === "\r") && !inQuotes) {
+      if (char === "\r" && next === "\n") i += 1;
+      row.push(cell);
+      if (row.length > 1 || row[0]) rows.push(row);
+      row = [];
+      cell = "";
+      continue;
+    }
+
+    cell += char;
+  }
+
+  if (cell.length || row.length) {
+    row.push(cell);
+    rows.push(row);
+  }
+
+  if (!rows.length) return [];
+  const headers = rows[0];
+  return rows.slice(1).map((values) => {
+    const entry = {};
+    headers.forEach((header, idx) => {
+      entry[header] = values[idx] || "";
+    });
+    return entry;
+  });
 }
