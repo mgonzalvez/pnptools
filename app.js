@@ -104,6 +104,29 @@ const FEATURED_BY_CATEGORY = {
       link: "https://formatter.gonzhome.us",
       image: "images/formatter.png"
     }
+  ],
+  "Formerly on PnPArcade": [
+    {
+      title: "PnP Arcade Substack",
+      description: "Archive and updates related to the former PnPArcade ecosystem.",
+      why: "A key reference point for tracking where legacy PnPArcade content resurfaces.",
+      link: "https://pnparcade.substack.com/",
+      image: "images/pnparcade_archive.png"
+    },
+    {
+      title: "Button Shy Games on itch.io",
+      description: "Button Shy's itch storefront for wallet-game digital files.",
+      why: "An important destination for finding titles that align with former PnPArcade audiences.",
+      link: "https://buttonshygames.itch.io/",
+      image: "images/buttonshy_itch.png"
+    },
+    {
+      title: "Button Shy Games on The Game Crafter",
+      description: "Button Shy's catalog presence on The Game Crafter platform.",
+      why: "A practical path to access and purchase games now hosted outside PnPArcade.",
+      link: "https://www.thegamecrafter.com/designers/button-shy-games",
+      image: "images/buttonshy_gamecrafter.png"
+    }
   ]
 };
 
