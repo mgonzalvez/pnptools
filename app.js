@@ -111,7 +111,7 @@ const FEATURED_BY_CATEGORY = {
       description: "Archive and updates related to the former PnPArcade ecosystem.",
       why: "A key reference point for tracking where legacy PnPArcade content resurfaces.",
       link: "https://pnparcade.substack.com/",
-      image: "images/pnparcade_archive.png"
+      image: "images/pnparcade_substack.jpg"
     },
     {
       title: "Button Shy Games on itch.io",
