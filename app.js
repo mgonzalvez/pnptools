@@ -108,7 +108,7 @@ const FEATURED_BY_CATEGORY = {
   "Formerly on PnPArcade": [
     {
       title: "PnP Arcade Substack",
-      description: "Archive and updates related to the former PnPArcade ecosystem.",
+      description: "PnPArcade now runs on Substack, sharing weekly picks, campaigns, and features on top print-and-play games.",
       why: "A key reference point for tracking where legacy PnPArcade content resurfaces.",
       link: "https://pnparcade.substack.com/",
       image: "images/pnparcade_substack.jpg"
