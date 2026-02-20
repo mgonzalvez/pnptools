@@ -431,6 +431,7 @@ function normalizeCategoryLabel(value) {
   if (/^pnp\s*groups?$/i.test(raw) || /^communities$/i.test(raw)) return "PnP Groups";
   if (/^pnp\s*stores?$/i.test(raw) || /^websites?$/i.test(raw) || /^web\s*stores?$/i.test(raw)) return "PnP Stores";
   if (/^pnp\s*tools?$/i.test(raw) || /^utilities$/i.test(raw)) return "PnP Tools";
+  if (/^formerly\s*on\s*pnp\s*arcade$/i.test(raw)) return "Formerly on PnPArcade";
   return raw;
 }
 
