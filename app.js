@@ -30,6 +30,9 @@ async function init() {
     return;
   }
 
+  state.activeCategory = normalizeCategoryLabel(document.body?.dataset.defaultCategory || "All");
+  syncTopNavState(state.activeCategory);
+
   try {
     const res = await fetch("data/resources.csv");
     if (!res.ok) throw new Error(`Failed to load CSV (${res.status})`);
@@ -62,14 +65,17 @@ function bindEvents() {
   });
 
   els.topNavLinks.forEach((link) => {
-    link.addEventListener("click", (event) => {
-      event.preventDefault();
-      const label = link.getAttribute("data-nav-category");
-      const normalized = normalizeCategoryLabel(label);
-      state.activeCategory = normalized;
-      syncTopNavState(normalized);
-      render();
-    });
+    const href = link.getAttribute("href") || "";
+    if (href === "#") {
+      link.addEventListener("click", (event) => {
+        event.preventDefault();
+        const label = link.getAttribute("data-nav-category");
+        const normalized = normalizeCategoryLabel(label);
+        state.activeCategory = normalized;
+        syncTopNavState(normalized);
+        render();
+      });
+    }
   });
 }
 
