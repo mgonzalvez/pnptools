@@ -87,6 +87,89 @@ h1 {
   background: #0c625b;
 }
 
+.featured-carousel {
+  margin: 4px 0 18px;
+}
+
+.featured-frame {
+  border: 2px solid var(--line);
+  border-radius: 18px;
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.featured-link {
+  display: block;
+  position: relative;
+  text-decoration: none;
+  color: inherit;
+}
+
+.featured-image {
+  width: 100%;
+  aspect-ratio: 16 / 7;
+  object-fit: cover;
+  display: block;
+}
+
+.featured-overlay {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 16px 18px 14px;
+  background: linear-gradient(180deg, rgba(15, 26, 47, 0.02) 0%, rgba(12, 25, 49, 0.8) 52%, rgba(12, 25, 49, 0.92) 100%);
+  color: #f4f7fb;
+}
+
+.featured-kicker {
+  margin: 0 0 6px;
+  font-size: 0.8rem;
+  opacity: 0.9;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.featured-title {
+  margin: 0 0 6px;
+  font-size: clamp(1.1rem, 2.5vw, 1.5rem);
+  line-height: 1.2;
+}
+
+.featured-description,
+.featured-why {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.4;
+}
+
+.featured-why {
+  margin-top: 6px;
+  color: #d7e3f8;
+}
+
+.featured-dots {
+  display: flex;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--surface);
+}
+
+.featured-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  border: 1px solid #88a0be;
+  background: #d8e3f0;
+  cursor: pointer;
+  padding: 0;
+}
+
+.featured-dot.active {
+  background: #2f8cff;
+  border-color: #2f8cff;
+}
+
 .tools-menu {
   position: relative;
 }
@@ -377,5 +460,14 @@ textarea {
   .tools-list {
     right: auto;
     left: 0;
+  }
+
+  .featured-overlay {
+    position: static;
+    background: #11294c;
+  }
+
+  .featured-image {
+    aspect-ratio: 16 / 9;
   }
 }
