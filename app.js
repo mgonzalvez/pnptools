@@ -147,6 +147,7 @@ const els = {
   cards: document.querySelector("#cards"),
   search: document.querySelector("#search-input"),
   sort: document.querySelector("#sort-select"),
+  meta: document.querySelector(".meta"),
   count: document.querySelector("#result-count"),
   template: document.querySelector("#card-template"),
   topNavLinks: [...document.querySelectorAll("[data-nav-category]")]
@@ -162,6 +163,7 @@ async function init() {
 
   state.activeCategory = normalizeCategoryLabel(document.body?.dataset.defaultCategory || "All");
   syncTopNavState(state.activeCategory);
+  ensureTagFilterControls();
   initFeaturedCarousel();
 
   try {
@@ -330,8 +332,9 @@ function render() {
   if (!els.cards || !els.count) return;
   const rows = getVisibleRows();
   const activeTagLabel = getActiveTagLabel();
-  const tagSuffix = activeTagLabel ? ` \u2022 tag: ${activeTagLabel} (click badge again to clear)` : "";
+  const tagSuffix = activeTagLabel ? ` \u2022 tag: ${activeTagLabel}` : "";
   els.count.textContent = `${rows.length} resource${rows.length === 1 ? "" : "s"} shown${tagSuffix}`;
+  updateClearTagButton();
   els.cards.innerHTML = "";
 
   if (!rows.length) {
@@ -351,7 +354,6 @@ function buildCard(row) {
   const node = els.template.content.firstElementChild.cloneNode(true);
   const img = node.querySelector(".card-image");
   const body = node.querySelector(".card-body");
-  const tag = node.querySelector(".category-tag");
   const title = node.querySelector(".card-title");
   const description = node.querySelector(".card-description");
   const link = node.querySelector(".card-link");
@@ -363,7 +365,6 @@ function buildCard(row) {
     img.remove();
   }
 
-  tag.textContent = normalizeCategoryLabel(row.category) || "Uncategorized";
   title.textContent = row.title;
   description.textContent = row.description || "No description provided.";
 
@@ -527,4 +528,25 @@ function getActiveTagLabel() {
     if (match) return match;
   }
   return "";
+}
+
+function ensureTagFilterControls() {
+  if (!els.meta || document.querySelector("#clear-tag-filter-btn")) return;
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.id = "clear-tag-filter-btn";
+  btn.className = "clear-tag-btn";
+  btn.textContent = "Clear tag filter";
+  btn.hidden = true;
+  btn.addEventListener("click", () => {
+    state.activeTag = "";
+    render();
+  });
+  els.meta.appendChild(btn);
+}
+
+function updateClearTagButton() {
+  const btn = document.querySelector("#clear-tag-filter-btn");
+  if (!btn) return;
+  btn.hidden = !state.activeTag;
 }

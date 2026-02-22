@@ -15,7 +15,6 @@ Static GitHub Pages site for browsing and submitting Print-and-Play tools/resour
   - `formerly-on-pnparcade.html`
 - Responsive card layout with:
   - Image
-  - Category tag
   - Title
   - Description
   - Tag badges (from CSV `TAGS`)
@@ -45,6 +44,7 @@ Static GitHub Pages site for browsing and submitting Print-and-Play tools/resour
 - Clickable tag badges on cards:
   - Clicking a badge filters current page by that tag
   - Clicking active badge again clears tag filter
+  - Dedicated `Clear tag filter` control appears when a tag filter is active
 - Dedicated submission page (`submit.html`)
 - Favicons from `/images/favicon.png` + `/images/favicon.ico`
 - Cloudflare Web Analytics on browse + submit pages
