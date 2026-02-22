@@ -272,6 +272,11 @@ h1 {
   color: var(--muted);
 }
 
+.field small {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
 input,
 select,
 textarea {
@@ -418,6 +423,24 @@ textarea {
   color: var(--ink);
   font-size: 0.94rem;
   line-height: 1.45;
+}
+
+.card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.card-tag {
+  display: inline-block;
+  border: 1px solid #c5d4e8;
+  background: #edf3fb;
+  color: #274663;
+  border-radius: 999px;
+  padding: 3px 8px;
+  font-size: 0.75rem;
+  line-height: 1.1;
 }
 
 .card-link {

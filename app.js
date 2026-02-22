@@ -305,7 +305,7 @@ function getVisibleRows() {
     const activeCategoryKey = categoryKey(state.activeCategory);
     if (activeCategoryKey !== "all" && rowCategoryKey !== activeCategoryKey) return false;
     if (!state.query) return true;
-    const haystack = `${row.title} ${row.description} ${row.category} ${rowCategory}`.toLowerCase();
+    const haystack = `${row.title} ${row.description} ${row.category} ${rowCategory} ${row.tags}`.toLowerCase();
     return haystack.includes(state.query);
   });
 
@@ -358,6 +358,20 @@ function buildCard(row) {
   tag.textContent = normalizeCategoryLabel(row.category) || "Uncategorized";
   title.textContent = row.title;
   description.textContent = row.description || "No description provided.";
+
+  const tags = parseTags(row.tags);
+  if (tags.length) {
+    const tagsWrap = document.createElement("div");
+    tagsWrap.className = "card-tags";
+    tags.slice(0, 6).forEach((tagText) => {
+      const pill = document.createElement("span");
+      pill.className = "card-tag";
+      pill.textContent = tagText;
+      tagsWrap.appendChild(pill);
+    });
+    description.insertAdjacentElement("afterend", tagsWrap);
+  }
+
   link.href = row.link;
   link.setAttribute("aria-label", `Open ${row.title}`);
 
@@ -371,7 +385,8 @@ function normalizeRow(row) {
     creator: (row.CREATOR || "").trim(),
     description: (row.DESCRIPTION || "").trim(),
     link: (row.LINK || "").trim(),
-    image: (row.IMAGE || "").trim()
+    image: (row.IMAGE || "").trim(),
+    tags: (row.TAGS || row.Tags || row.tags || "").trim()
   };
 }
 
@@ -472,4 +487,11 @@ function resolveImageUrl(value) {
   if (raw.startsWith("/images/")) return `${BASE_PATH}${raw}`;
   if (raw.startsWith("/")) return `${BASE_PATH}${raw}`;
   return raw;
+}
+
+function parseTags(value) {
+  return String(value || "")
+    .split(",")
+    .map((tag) => tag.trim())
+    .filter(Boolean);
 }

@@ -6,12 +6,14 @@ let isSubmitting = false;
 const els = {
   form: document.querySelector("#submit-form"),
   btn: document.querySelector("#submit-btn"),
-  status: document.querySelector("#submit-status")
+  status: document.querySelector("#submit-status"),
+  tagsSelect: document.querySelector("#tags-select")
 };
 
 if (els.form) {
   els.form.addEventListener("submit", handleSubmit);
   warmExistingEntries();
+  bindTagSelectionLimit();
 }
 
 async function handleSubmit(event) {
@@ -34,7 +36,8 @@ async function handleSubmit(event) {
     title: String(formData.get("title") || "").trim(),
     description: String(formData.get("description") || "").trim(),
     link: String(formData.get("link") || "").trim(),
-    image: String(formData.get("image") || "").trim()
+    image: String(formData.get("image") || "").trim(),
+    tags: formData.getAll("tags").map((t) => String(t || "").trim()).filter(Boolean).slice(0, 3).join(", ")
   };
 
   if (!form.reportValidity()) {
@@ -192,7 +195,8 @@ function isAppsScriptEndpoint(endpoint) {
 
 async function warmExistingEntries() {
   try {
-    await loadExistingEntries();
+    const rows = await loadExistingEntries();
+    populateTagsSelect(rows);
   } catch (_) {
     // Non-blocking: duplicate check will degrade gracefully.
   }
@@ -207,7 +211,8 @@ async function loadExistingEntries() {
   existingEntries = rows.map((row) => ({
     category: normalizeText(row.CATEGORY || ""),
     title: normalizeText(row.TITLE || ""),
-    link: normalizeUrl(row.LINK || "")
+    link: normalizeUrl(row.LINK || ""),
+    tags: parseTagsField(row.TAGS || row.Tags || row.tags || "")
   }));
   return existingEntries;
 }
@@ -308,5 +313,39 @@ function parseCSV(text) {
       entry[header] = values[idx] || "";
     });
     return entry;
+  });
+}
+
+function parseTagsField(value) {
+  return String(value || "")
+    .split(",")
+    .map((tag) => tag.trim())
+    .filter(Boolean);
+}
+
+function populateTagsSelect(rows) {
+  if (!els.tagsSelect) return;
+  const allTags = new Set();
+  rows.forEach((row) => {
+    (row.tags || []).forEach((tag) => allTags.add(tag));
+  });
+
+  const sorted = [...allTags].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
+  els.tagsSelect.innerHTML = "";
+  sorted.forEach((tag) => {
+    const opt = document.createElement("option");
+    opt.value = tag;
+    opt.textContent = tag;
+    els.tagsSelect.appendChild(opt);
+  });
+}
+
+function bindTagSelectionLimit() {
+  if (!els.tagsSelect) return;
+  els.tagsSelect.addEventListener("change", () => {
+    const selected = [...els.tagsSelect.selectedOptions];
+    if (selected.length <= 3) return;
+    selected[selected.length - 1].selected = false;
+    setStatus("You can select up to 3 tags.", true);
   });
 }
