@@ -513,6 +513,13 @@ function parseTags(value) {
     .filter(Boolean);
 }
 
+function normalizeText(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ");
+}
+
 function getActiveTagLabel() {
   if (!state.activeTag) return "";
   for (const row of state.rows) {
