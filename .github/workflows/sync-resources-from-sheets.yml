@@ -10,7 +10,7 @@ permissions:
 
 env:
   SHEETS_CSV_URL: ${{ vars.GOOGLE_SHEETS_RESOURCES_CSV_URL }}
-  REQUIRED_HEADER: "CATEGORY,TITLE,CREATOR,DESCRIPTION,LINK,IMAGE"
+  REQUIRED_HEADER: "CATEGORY,TITLE,CREATOR,DESCRIPTION,LINK,IMAGE,TAGS"
 
 jobs:
   sync:
@@ -46,7 +46,7 @@ jobs:
 
           SRC = "data/resources.source.csv"
           OUT = "data/resources.normalized.csv"
-          CANON = ["CATEGORY","TITLE","CREATOR","DESCRIPTION","LINK","IMAGE"]
+          CANON = ["CATEGORY","TITLE","CREATOR","DESCRIPTION","LINK","IMAGE","TAGS"]
 
           def norm(s):
             return re.sub(r"[^a-z0-9]+", " ", (s or "").strip().lower()).strip()
@@ -66,6 +66,9 @@ jobs:
             norm("IMAGE"): "IMAGE",
             norm("IMG"): "IMAGE",
             norm("THUMBNAIL"): "IMAGE",
+            norm("TAGS"): "TAGS",
+            norm("TAGS LIST"): "TAGS",
+            norm("LABELS"): "TAGS",
           }
 
           with open(SRC, newline="", encoding="utf-8") as f:
