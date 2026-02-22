@@ -2,6 +2,7 @@ const state = {
   rows: [],
   query: "",
   activeCategory: "All",
+  activeTag: "",
   sort: "title-asc"
 };
 
@@ -304,6 +305,10 @@ function getVisibleRows() {
     const rowCategoryKey = categoryKey(row.category);
     const activeCategoryKey = categoryKey(state.activeCategory);
     if (activeCategoryKey !== "all" && rowCategoryKey !== activeCategoryKey) return false;
+    if (state.activeTag) {
+      const rowTagKeys = parseTags(row.tags).map((tag) => normalizeText(tag));
+      if (!rowTagKeys.includes(state.activeTag)) return false;
+    }
     if (!state.query) return true;
     const haystack = `${row.title} ${row.description} ${row.category} ${rowCategory} ${row.tags}`.toLowerCase();
     return haystack.includes(state.query);
@@ -324,7 +329,9 @@ function compareRows(a, b, sortMode) {
 function render() {
   if (!els.cards || !els.count) return;
   const rows = getVisibleRows();
-  els.count.textContent = `${rows.length} resource${rows.length === 1 ? "" : "s"} shown`;
+  const activeTagLabel = getActiveTagLabel();
+  const tagSuffix = activeTagLabel ? ` \u2022 tag: ${activeTagLabel} (click badge again to clear)` : "";
+  els.count.textContent = `${rows.length} resource${rows.length === 1 ? "" : "s"} shown${tagSuffix}`;
   els.cards.innerHTML = "";
 
   if (!rows.length) {
@@ -343,6 +350,7 @@ function render() {
 function buildCard(row) {
   const node = els.template.content.firstElementChild.cloneNode(true);
   const img = node.querySelector(".card-image");
+  const body = node.querySelector(".card-body");
   const tag = node.querySelector(".category-tag");
   const title = node.querySelector(".card-title");
   const description = node.querySelector(".card-description");
@@ -364,12 +372,21 @@ function buildCard(row) {
     const tagsWrap = document.createElement("div");
     tagsWrap.className = "card-tags";
     tags.slice(0, 6).forEach((tagText) => {
-      const pill = document.createElement("span");
+      const pill = document.createElement("button");
+      pill.type = "button";
       pill.className = "card-tag";
       pill.textContent = tagText;
+      const tagKey = normalizeText(tagText);
+      if (state.activeTag === tagKey) pill.classList.add("active");
+      pill.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        state.activeTag = state.activeTag === tagKey ? "" : tagKey;
+        render();
+      });
       tagsWrap.appendChild(pill);
     });
-    description.insertAdjacentElement("afterend", tagsWrap);
+    body.prepend(tagsWrap);
   }
 
   link.href = row.link;
@@ -494,4 +511,13 @@ function parseTags(value) {
     .split(",")
     .map((tag) => tag.trim())
     .filter(Boolean);
+}
+
+function getActiveTagLabel() {
+  if (!state.activeTag) return "";
+  for (const row of state.rows) {
+    const match = parseTags(row.tags).find((tag) => normalizeText(tag) === state.activeTag);
+    if (match) return match;
+  }
+  return "";
 }

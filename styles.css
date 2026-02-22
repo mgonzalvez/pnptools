@@ -429,7 +429,7 @@ textarea {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin-top: 2px;
+  margin: 0 0 2px;
 }
 
 .card-tag {
@@ -441,6 +441,19 @@ textarea {
   padding: 3px 8px;
   font-size: 0.75rem;
   line-height: 1.1;
+  cursor: pointer;
+  font-family: inherit;
+  text-transform: lowercase;
+}
+
+.card-tag:hover {
+  background: #dce9f8;
+}
+
+.card-tag.active {
+  background: #2f8cff;
+  border-color: #2f8cff;
+  color: #ffffff;
 }
 
 .card-link {
