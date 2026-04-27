@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PnP Tools | Print and Play Tools and Resources</title>
+  <link rel="icon" type="image/png" href="images/favicon.png">
+  <link rel="shortcut icon" href="images/favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+  <!-- Cloudflare Web Analytics -->
+  <script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "2d29c2281c5b49c8896fa635f5a63582"}'></script>
+  <!-- End Cloudflare Web Analytics -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body data-default-category="PnP Tools">
+  <main class="page">
+    <header class="hero">
+      <p class="eyebrow">Print and Play Directory</p>
+      <h1>Print and Play Tools and Resources</h1>
+      <p class="subtitle">Your essential resource for print and play websites, tools, stores, sources, and more. Search quickly, filter by category, and jump straight to each resource.</p>
+    </header>
+
+    <nav class="top-nav" aria-label="Primary">
+      <a class="top-nav-link" href="index.html" data-nav-category="All">All</a>
+      <a class="top-nav-link" href="martins-tools.html" data-nav-category="Martin's Tools">Martin's Tools</a>
+      <a class="top-nav-link" href="free-pnp-sources.html" data-nav-category="Free PnP Sources">Free PnP Sources</a>
+      <a class="top-nav-link" href="pnp-groups.html" data-nav-category="PnP Groups">PnP Groups</a>
+      <a class="top-nav-link" href="pnp-stores.html" data-nav-category="PnP Stores">PnP Stores</a>
+      <a class="top-nav-link" href="pnp-tools.html" data-nav-category="PnP Tools">PnP Tools</a>
+      <a class="top-nav-link" href="formerly-on-pnparcade.html" data-nav-category="Formerly on PnPArcade">Formerly on PnPArcade</a>
+      <a class="top-nav-link submit-link" href="submit.html">Submit Resource</a>
+      <details class="tools-menu">
+        <summary>Tools</summary>
+        <div class="tools-list">
+          <a href="http://pnpfinder.com" target="_blank" rel="noreferrer noopener">PnPFinder</a>
+          <a href="https://launchpad.gonzhome.us" target="_blank" rel="noreferrer noopener">PnP Launchpad</a>
+          <a href="https://formatter.gonzhome.us" target="_blank" rel="noreferrer noopener">Card Formatter</a>
+          <a href="https://extractor.gonzhome.us" target="_blank" rel="noreferrer noopener">Card Extractor</a>
+          <a href="https://prototyper.gonzhome.us" target="_blank" rel="noreferrer noopener">Prototyper</a>
+        </div>
+      </details>
+    </nav>
+
+    <section class="controls">
+      <label class="field">
+        <span>Search</span>
+        <input id="search-input" type="search" placeholder="Title, creator, or description">
+      </label>
+      <label class="field">
+        <span>Sort</span>
+        <select id="sort-select">
+          <option value="title-asc">Title A-Z</option>
+          <option value="title-desc">Title Z-A</option>
+          <option value="category-asc">Category A-Z</option>
+        </select>
+      </label>
+    </section>
+
+    <section class="meta">
+      <p id="result-count">Loading resources...</p>
+    </section>
+
+    <section id="cards" class="cards" aria-live="polite"></section>
+    <div id="category-filters" hidden></div>
+  </main>
+
+  <template id="card-template">
+    <article class="card">
+      <div class="card-image-wrap">
+        <img class="card-image" alt="">
+      </div>
+      <div class="card-body">
+        <h2 class="card-title"></h2>
+        <p class="card-description"></p>
+        <a class="card-link" target="_blank" rel="noopener noreferrer">Open resource</a>
+      </div>
+    </article>
+  </template>
+
+  <script src="app.js?v=20260219-13"></script>
+</body>
+</html>
