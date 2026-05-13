@@ -101,6 +101,12 @@ Edit the `FEATURED_BY_CATEGORY` object in `app.js`. Each category has an array o
 
 - `GOOGLE_SHEETS_RESOURCES_CSV_URL` (repo variable): Published Google Sheet CSV URL for the sync workflow
 
+## Recent Fixes
+
+| Date | Issue | Fix |
+|------|-------|-----|
+| 2026-05-12 | Tools dropdown appearing off-screen left on desktop and mobile | Changed `.tools-list` from `right: 0` to `left: 0` so dropdown aligns to left edge of Tools button; removed redundant mobile override |
+
 ## Important Constraints
 
 - Site is static - no server-side rendering or database
