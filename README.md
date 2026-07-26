@@ -2,6 +2,21 @@
 
 Static GitHub Pages site for browsing and submitting Print-and-Play tools/resources.
 
+## Local Development
+
+No installation or build step is required. Start the dependency-free Node.js
+server:
+
+```bash
+node server.js
+```
+
+Then open `http://127.0.0.1:3000`.
+
+The submission page is configured with the production Google Apps Script
+webhook. A local form submission therefore creates a real production
+submission; avoid using the submit button for test data.
+
 ## Current Features
 
 - CSV-driven resource directory (`data/resources.csv`)
@@ -48,6 +63,11 @@ Static GitHub Pages site for browsing and submitting Print-and-Play tools/resour
 - Dedicated submission page (`submit.html`)
 - Favicons from `/images/favicon.png` + `/images/favicon.ico`
 - Cloudflare Web Analytics on browse + submit pages
+- Shared Gonzhome visual system:
+  - Responsive branded header
+  - Related Sites menu
+  - Persisted light/dark theme with system fallback
+  - Layered glass surfaces and elevated resource cards
 
 ## Submission Form
 
@@ -91,7 +111,15 @@ Submission UX:
   - Workflow: `.github/workflows/sync-resources-from-sheets.yml`
   - Sync includes `TAGS` column
 
-See also: `BACKEND_SETUP.md`
+Canonical CSV headers:
+
+```text
+CATEGORY,TITLE,CREATOR,DESCRIPTION,LINK,IMAGE,TAGS
+```
+
+`CREATOR` is supported by the data schema but is not currently collected by the
+submission form. See `BACKEND_SETUP.md` for webhook, sheet, and repository
+variable configuration.
 
 ## Project Structure
 
@@ -104,7 +132,11 @@ See also: `BACKEND_SETUP.md`
 - `formerly-on-pnparcade.html` - section page
 - `submit.html` - submission page
 - `app.js` - browse/filter/sort/render logic
+- `site-ui.js` - shared header, related-sites menu, and theme behavior
 - `submit.js` - submission + validation logic
+- `server.js` - dependency-free local static server
 - `styles.css` - shared styles
 - `data/resources.csv` - source data displayed on site
 - `images/` - local images and favicon files
+- `.github/workflows/sync-resources-from-sheets.yml` - scheduled sheet-to-CSV sync
+- `BACKEND_SETUP.md` - production submission and sync setup

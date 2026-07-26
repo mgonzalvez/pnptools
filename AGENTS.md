@@ -27,6 +27,7 @@ Static GitHub Pages site for browsing and submitting Print-and-Play board game t
 | `formerly-on-pnparcade.html` | Section page - Formerly on PnPArcade |
 | `submit.html` | Submission form page |
 | `app.js` | Browse/filter/sort/render logic for all section pages |
+| `site-ui.js` | Shared branded header, related-sites menu, and persisted light/dark theme |
 | `submit.js` | Submission form validation + webhook logic |
 | `server.js` | Local Node.js dev server (static files + POST `/api/resources`) |
 | `styles.css` | Shared styles |
@@ -55,6 +56,7 @@ Headers: `CATEGORY,TITLE,CREATOR,DESCRIPTION,LINK,IMAGE,TAGS`
 ### Frontend Structure
 
 - All section pages share the same JS logic in `app.js`
+- All pages load `site-ui.js` for the shared Gonzhome header and theme behavior
 - `app.js` fetches `data/resources.csv`, parses it, and renders cards based on the page's `data-default-category` attribute
 - Category filtering is done client-side via `normalizeCategoryLabel()` which handles various label aliases
 - Featured carousel on each section page is hardcoded in `FEATURED_BY_CATEGORY` object in `app.js`
@@ -78,7 +80,8 @@ Headers: `CATEGORY,TITLE,CREATOR,DESCRIPTION,LINK,IMAGE,TAGS`
 - **Category normalization**: `normalizeCategoryLabel()` in `app.js` handles fuzzy matching of category names (e.g. "PnP Tools" / "Utilities" -> "PnP Tools")
 - **Martin's Tools** is reserved - not available in the submission form dropdown
 - **CSS custom properties** used for theming (e.g. `--muted`)
-- **Font**: Space Grotesk from Google Fonts
+- **Theme**: Light/dark preference is stored under `pnptools-theme` and otherwise follows the system setting
+- **Font**: Native system UI stack matching the other Gonzhome tools
 
 ## Running Locally
 
@@ -86,6 +89,10 @@ Headers: `CATEGORY,TITLE,CREATOR,DESCRIPTION,LINK,IMAGE,TAGS`
 node server.js
 # Open http://127.0.0.1:3000
 ```
+
+The checked-in `submit.html` points to the production Google Apps Script
+webhook. Submitting the form locally creates a real production submission, so
+do not use the submit button for test data.
 
 ## Adding a Resource
 
