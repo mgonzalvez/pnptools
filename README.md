@@ -47,12 +47,16 @@ submission; avoid using the submit button for test data.
   - PnP Stores
   - PnP Tools
   - Formerly on PnPArcade
-- Tools dropdown menu:
+- Related Sites menu:
+  - Gonzhome
   - PnPFinder
+  - PnP Daily
   - PnP Launchpad
+  - BoardSplitter
   - Card Formatter
   - Card Extractor
-  - Prototyper
+  - Card Prototyper
+  - Geeklist Generator
 - Featured carousel on section pages (5-second auto-rotate):
   - Clickable slides
   - Curated title + description + "why it stands out"
@@ -65,7 +69,6 @@ submission; avoid using the submit button for test data.
 - Cloudflare Web Analytics on browse + submit pages
 - Shared Gonzhome visual system:
   - Responsive branded header
-  - Related Sites menu
   - Persisted light/dark theme with system fallback
   - Layered glass surfaces and elevated resource cards
 

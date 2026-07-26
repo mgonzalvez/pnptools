@@ -876,35 +876,6 @@ html[data-theme="dark"] .card:hover {
   -webkit-backdrop-filter: blur(16px);
 }
 
-.bottom-nav-buttons {
-  display: flex;
-  justify-content: center;
-  gap: 7px;
-  flex-wrap: wrap;
-}
-
-.bottom-nav-link {
-  min-height: 34px;
-  padding: 6px 11px;
-  display: inline-flex;
-  align-items: center;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  color: var(--text-secondary);
-  background: var(--surface);
-  font-size: 0.78rem;
-  font-weight: 620;
-  text-decoration: none;
-  transition: color 150ms ease, border-color 150ms ease, background 150ms ease, transform 150ms ease;
-}
-
-.bottom-nav-link:hover {
-  transform: translateY(-1px);
-  border-color: var(--accent);
-  color: var(--accent);
-  background: var(--accent-soft);
-}
-
 .bottom-nav-footer {
   text-align: center;
   color: var(--muted);
@@ -1070,7 +1041,6 @@ html[data-theme="dark"] .card:hover {
 
 @media (pointer: coarse) {
   .top-nav-link,
-  .bottom-nav-link,
   .card-tag,
   .card-link {
     min-height: 44px;
