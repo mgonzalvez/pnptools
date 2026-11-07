@@ -121,3 +121,11 @@ Edit the `FEATURED_BY_CATEGORY` object in `app.js`. Each category has an array o
 - CSV is the single source of truth - all data flows through it
 - The GitHub Action normalizes headers flexibly (aliases like "TYPE" -> "CATEGORY", "NAME" -> "TITLE", etc.)
 - Images must be public direct URLs (blocked hosts: Google Drive, Dropbox, OneDrive, iCloud, Mega, Facebook, localhost)
+
+## Registry & provenance rule (portfolio-wide)
+
+Personal project — completely separate from Apple work.
+
+- `.npmrc` pins `registry=https://registry.npmjs.org`. Never let Apple's internal npm mirror (`npm.apple.com`, `artifacts.apple.com/artifactory/...`) end up in `package-lock.json`; GitHub Actions can't reach it and CI fails with `ENOTFOUND`.
+- Audit before pushing: `../scripts/check-registry.sh` (add `--fix` to normalize).
+- No work credentials, internal hostnames, proprietary assets, or confidential material in this repo.
